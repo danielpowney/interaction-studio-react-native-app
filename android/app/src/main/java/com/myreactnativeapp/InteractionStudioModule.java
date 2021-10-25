@@ -37,19 +37,29 @@ class InteractionStudioModule extends ReactContextBaseJavaModule {
         return "InteractionStudioModule";
     }
 
+    /**
+     * Called when screen changes. Sends a custom action event to Interaction Studio
+     */
     @ReactMethod
-    void renderApp() {
-        Log.d(LOG_TAG, "renderApp()");
+    void viewScreen(String screenName) {
+        Log.d(LOG_TAG, "View " + screenName);
+
+        Evergage evergage = Evergage.getInstance();
+        Context context = Evergage.getInstance().getGlobalContext();
+        context.trackAction("View " + screenName);
     }
 
     /**
-     * Home screen button click
+     * Called when button on home screen is clicked. Sends a custom action event to Interaction Studio
+     * and also emits an event with any campaign response data to the React App to display
      */
     @ReactMethod
-    void onClick() {
+    void homeBtnClick() {
+
+        Log.d(LOG_TAG, "Home Button Click");
 
         Evergage evergage = Evergage.getInstance();
-        Context screen = Evergage.getInstance().getGlobalContext();
+        Context context = Evergage.getInstance().getGlobalContext();
 
         CampaignHandler handler = new CampaignHandler() {
 
@@ -57,7 +67,7 @@ class InteractionStudioModule extends ReactContextBaseJavaModule {
             public void handleCampaign(@NonNull Campaign campaign) {
 
                 Log.d(LOG_TAG, "Handling campaign with name " + campaign.getCampaignName());
-                screen.trackImpression(campaign);
+                context.trackImpression(campaign);
                 try {
                     JSONObject campaignData = campaign.getData();
 
@@ -75,11 +85,8 @@ class InteractionStudioModule extends ReactContextBaseJavaModule {
             }
         };
 
-        screen.setCampaignHandler(handler, "homeScreen"); // make sure campaign has this target
-        screen.trackAction("Home sceen button click");
-
-
-        Log.d(LOG_TAG, "onClick()");
+        context.setCampaignHandler(handler, "homeScreen"); // make sure campaign has this target
+        context.trackAction("Home Button Click");
 
     }
 }
