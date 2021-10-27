@@ -19,7 +19,10 @@ function App() {
         <NavigationContainer
             ref={navigationRef}
             onReady={() => {
-                routeNameRef.current = navigationRef.getCurrentRoute().name;
+                const currentRouteName = navigationRef.getCurrentRoute().name;
+                routeNameRef.current = currentRouteName;
+                InteractionStudioModule.viewScreen(currentRouteName, null); // initial view
+                console.log("View " + currentRouteName);
             }}
             onStateChange={async () => {
                 /*
@@ -30,7 +33,7 @@ function App() {
                 if (previousRouteName !== currentRouteName) {
 
                     if (currentRouteName === "Product") { // View Product
-                        let productId = "1"; // get product id
+                        let productId = "abc"; // get product id
                         InteractionStudioModule.viewScreen(currentRouteName, productId);
                     } else if (currentRouteName === "Category") { // View Category
                         let categoryId = "1"; // get category id
@@ -65,13 +68,13 @@ function CategoryScreen({ navigation: { goBack, navigate } }) {
 }
 
 /**
- * Product screen
+ * Product screen with an add to cart button
  */
 function ProductScreen({ navigation: { goBack, navigate } }) {
     return (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <Button title="Add to Cart" onPress={() => {
-                let productId = "1";
+                let productId = "abc";
                 let quantity = 1;
                 InteractionStudioModule.addToCart(productId, quantity, () => {
                     Alert.alert( null, "Product has been added to cart." );
