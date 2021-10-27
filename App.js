@@ -1,5 +1,5 @@
 import React, {useRef} from "react";
-import { Button, View, Text, NativeModules, NativeEventEmitter } from "react-native";
+import { Button, View, Text, NativeModules, NativeEventEmitter, Alert, Image } from "react-native";
 import { NavigationContainer, useNavigationContainerRef } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
@@ -28,26 +28,58 @@ function App() {
                 const previousRouteName = routeNameRef.current;
                 const currentRouteName = navigationRef.getCurrentRoute().name;
                 if (previousRouteName !== currentRouteName) {
-                    InteractionStudioModule.viewScreen(currentRouteName);
+
+                    if (currentRouteName === "Product") { // View Product
+                        let productId = "1"; // get product id
+                        InteractionStudioModule.viewScreen(currentRouteName, productId);
+                    } else if (currentRouteName === "Category") { // View Category
+                        let categoryId = "1"; // get category id
+                        InteractionStudioModule.viewScreen(currentRouteName, categoryId);
+                    } else {
+                        InteractionStudioModule.viewScreen(currentRouteName, null);
+                    }
+                    console.log("View " + currentRouteName);
+
                 }
                 routeNameRef.current = currentRouteName;
             }}
         >
             <Stack.Navigator initialRouteName="Home">
                 <Stack.Screen name="Home" component={HomeScreen} />
-                <Stack.Screen name="Detail" component={DetailScreen} />
+                <Stack.Screen name="Product" component={ProductScreen} />
+                 <Stack.Screen name="Category" component={CategoryScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );
 }
 
 /**
- * Detail screen
+ * Category screen
  */
-function DetailScreen({ navigation: { goBack } }) {
+function CategoryScreen({ navigation: { goBack, navigate } }) {
     return (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-            <Button title="Back to Home" onPress={() => goBack() } />
+            <Button title="Go Back" onPress={() => goBack() } />
+        </View>
+    );
+}
+
+/**
+ * Product screen
+ */
+function ProductScreen({ navigation: { goBack, navigate } }) {
+    return (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <Button title="Add to Cart" onPress={() => {
+                let productId = "1";
+                let quantity = 1;
+                InteractionStudioModule.addToCart(productId, quantity, () => {
+                    Alert.alert( null, "Product has been added to cart." );
+                });
+            } }
+            />
+            <Button title="View Category" onPress={() => navigate('Category') } />
+            <Button title="Go to Home" onPress={() => navigate('Home') } />
         </View>
     );
 }
@@ -59,18 +91,21 @@ class HomeScreen extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            param1: ""
+            headerText: null,
+            imageURL: null
         };
     }
 
     /**
-      * When the component is ready, add an event listener to handle campaign responses
+      * When the component is ready, add an event listener to handle home banner 1 campaign response
       */ 
     componentDidMount() {
         const eventEmitter = new NativeEventEmitter(InteractionStudioModule);
-        this.eventListener = eventEmitter.addListener("my_campaign_response", (eventData) => {
+        this.eventListener = eventEmitter.addListener("homeBanner1_ready", (eventData) => {
+            console.log(eventData.imageURL);
             this.setState({
-                param1: eventData.param1
+                imageURL: eventData.imageURL,
+                headerText : eventData.headerText
             });
         });
     }
@@ -80,25 +115,25 @@ class HomeScreen extends React.Component {
     }
 
     /**
-     * When the button is clicked, a call is made to the native module to send an
-     * event to Interaction Studio. The UI will be re-rendered asyncrhonously with 
-     * any campaign responses if the Rezct component state changes.
+     * Renders component
      */
     render() {
+        let isLoading = ( this.state.imageURL == null || this.state.headerText == null );
         return (
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                { isLoading ? 
+                    ( <Text style={{marginBottom: 5}}>Loading...</Text> ) : 
+                    ( 
+                        <>
+                            <Text style={{ fontWeight: 'bold', fontSize: 24, marginBottom: 5 }}>{this.state.headerText}</Text>
+                            <Image source={{ uri: this.state.imageURL }} style={{ resizeMode: 'cover', width: '100%', height: 200, marginBottom: 5 }} />
+                        </>
+                    )
+                }
                 <Button
-                    title="Click Me"
+                    title="Go to Product"
                     onPress={() => {
-                        InteractionStudioModule.homeBtnClick();
-                    }}
-                />
-                <Text>Campaign response param1: {this.state.param1}</Text>
-                
-                <Button
-                    title="Go to Details screen"
-                    onPress={() => {
-                        this.props.navigation.navigate("Detail");
+                        this.props.navigation.navigate("Product");
                     }}
                 />
             </View>

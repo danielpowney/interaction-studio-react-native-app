@@ -6,9 +6,13 @@ import com.evergage.android.Campaign;
 import com.evergage.android.CampaignHandler;
 import com.evergage.android.Evergage;
 import com.evergage.android.Context;
+import com.evergage.android.promote.Product;
+import com.evergage.android.promote.Category;
+import com.evergage.android.promote.LineItem;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
 import org.json.JSONObject;
@@ -30,6 +34,7 @@ class InteractionStudioModule extends ReactContextBaseJavaModule {
     InteractionStudioModule(ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
+        setCampaignHandlers();
     }
 
     @Override
@@ -38,45 +43,28 @@ class InteractionStudioModule extends ReactContextBaseJavaModule {
     }
 
     /**
-     * Called when screen changes. Sends a custom action event to Interaction Studio
+     * Adds campaign handlers
      */
-    @ReactMethod
-    void viewScreen(String screenName) {
-        Log.d(LOG_TAG, "View " + screenName);
-
-        Evergage evergage = Evergage.getInstance();
-        Context context = Evergage.getInstance().getGlobalContext();
-        context.trackAction("View " + screenName);
-    }
-
-    /**
-     * Called when button on home screen is clicked. Sends a custom action event to Interaction Studio
-     * and also emits an event with any campaign response data to the React App to display
-     */
-    @ReactMethod
-    void homeBtnClick() {
-
-        Log.d(LOG_TAG, "Home Button Click");
+    public void setCampaignHandlers() {
 
         Evergage evergage = Evergage.getInstance();
         Context context = Evergage.getInstance().getGlobalContext();
 
-        CampaignHandler handler = new CampaignHandler() {
+        CampaignHandler homeBanner1CampaignHandler = new CampaignHandler() {
 
             @Override
             public void handleCampaign(@NonNull Campaign campaign) {
 
-                Log.d(LOG_TAG, "Handling campaign with name " + campaign.getCampaignName());
+                Log.d(LOG_TAG, "Handling campaign: " + campaign.getCampaignName());
                 context.trackImpression(campaign);
                 try {
                     JSONObject campaignData = campaign.getData();
 
                     WritableMap eventData = new WritableNativeMap(); 
-                    eventData.putString("param1", campaignData.getString("param1"));  // make sure campaign response contains param1
+                    eventData.putString("headerText", campaignData.getString("headerText"));
+                    eventData.putString("imageURL", campaignData.getString("imageURL"));
 
-                    Log.d(LOG_TAG, "Sending campaign response event to React app");
-                    reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                        .emit("my_campaign_response", eventData);
+                    reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("homeBanner1_ready", eventData);
 
                 } catch (Exception e) {
                     Log.d(LOG_TAG, e.getMessage());
@@ -84,9 +72,42 @@ class InteractionStudioModule extends ReactContextBaseJavaModule {
                 }
             }
         };
+        context.setCampaignHandler(homeBanner1CampaignHandler, "homeBanner1"); // make sure campaign has this target
 
-        context.setCampaignHandler(handler, "homeScreen"); // make sure campaign has this target
-        context.trackAction("Home Button Click");
+
 
     }
+
+    /**
+     * Called when screen changes. Sends an event to Interaction Studio
+     */
+    @ReactMethod
+    void viewScreen(String screenName, String itemId) {
+
+        Evergage evergage = Evergage.getInstance();
+        Context context = Evergage.getInstance().getGlobalContext();
+
+        if (screenName == "Product") {
+            context.viewItem(new Product(itemId), "View " + screenName);
+        } else if (screenName == "Category") {
+            context.viewCategory(new Category(itemId), "View " + screenName);
+        } else {
+            context.trackAction("View " + screenName);
+        }
+
+        Log.d(LOG_TAG, "View " + screenName);
+    }
+
+    /**
+     * Called when add to cart button is pressed
+     */
+    @ReactMethod
+    void addToCart(String productId, Integer quantity, Callback callback) {
+        Log.d(LOG_TAG, "Product Add to Cart");
+        Evergage evergage = Evergage.getInstance();
+        Context context = Evergage.getInstance().getGlobalContext();
+        context.addToCart(new LineItem(new Product(productId), quantity));
+        callback.invoke();
+    }
+
 }
