@@ -33,10 +33,10 @@ function App() {
                 if (previousRouteName !== currentRouteName) {
 
                     if (currentRouteName === "Product") { // View Product
-                        let productId = "abc"; // get product id
+                        let productId = "abc"; // lookup product id
                         InteractionStudioModule.viewScreen(currentRouteName, productId);
                     } else if (currentRouteName === "Category") { // View Category
-                        let categoryId = "1"; // get category id
+                        let categoryId = "abc"; // lookup category id
                         InteractionStudioModule.viewScreen(currentRouteName, categoryId);
                     } else {
                         InteractionStudioModule.viewScreen(currentRouteName, null);
@@ -74,8 +74,8 @@ function ProductScreen({ navigation: { goBack, navigate } }) {
     return (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <Button title="Add to Cart" onPress={() => {
-                let productId = "abc";
-                let quantity = 1;
+                let productId = "abc"; // lookup product id
+                let quantity = 1; // set quantity
                 InteractionStudioModule.addToCart(productId, quantity, () => {
                     Alert.alert( null, "Product has been added to cart." );
                 });
