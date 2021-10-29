@@ -110,7 +110,7 @@ class InteractionStudioModule extends ReactContextBaseJavaModule {
     }
 
     /**
-     * Called when the add to cart button is pressed. A callback fucntion is invoked once complete.
+     * Called when the add to cart button is pressed. A callback function is invoked once complete.
      */
     @ReactMethod
     void addToCart(String productId, Integer quantity, Callback callback) {

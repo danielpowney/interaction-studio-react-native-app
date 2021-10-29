@@ -65,11 +65,11 @@ public class MainApplication extends Application implements ReactApplication {
     
     Evergage evergage = Evergage.getInstance();
 
-    evergage.setUserId("testuser022");
+    evergage.setUserId("<user id>");
 
     evergage.start(new ClientConfiguration.Builder()
-      .account("dpowney1463884")
-      .dataset("engage")
+      .account("<account>")
+      .dataset("<dataset>")
       .usePushNotifications(true)
       .build());
 
